@@ -288,6 +288,9 @@ fork(void)
     return -1;
   }
 
+  // Copy trace
+  np->trace = p->trace;
+
   // Copy user memory from parent to child.
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);
@@ -680,4 +683,20 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+// count sum of proc which is used
+uint64
+count_used_proc()
+{
+  uint64 count = 0;
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    if (p->state != UNUSED)
+    {
+      count++;
+    }
+  }
+  return count;
 }

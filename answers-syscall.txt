@@ -1,0 +1,6 @@
+usertrap
+7
+SYS_exec
+machine mode
+0x80001ff8 <syscall+20> lw      a3,0(zero) # 0x0
+a3
