@@ -1,0 +1,4 @@
+page 0 contains pte of page1
+page 1 contains pte of page2
+pte in page1 didn't set the PTE_U, so user mode cant access
+third page contain the pa of the varable
