@@ -122,6 +122,7 @@ walkaddr(pagetable_t pagetable, uint64 va)
   if((*pte & PTE_U) == 0)
     return 0;
   pa = PTE2PA(*pte);
+
   return pa;
 }
 
@@ -437,3 +438,51 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return -1;
   }
 }
+
+
+
+void
+pteprint(pagetable_t pagetable, int level)
+{
+  if(level > 2) return;
+  // search every pte in total 512 PTEs in pagetable
+  for (int i = 0; i < 512; i++)
+  {
+    // fetch PTE
+    pte_t pte = pagetable[i];
+    // PTE valid
+    if (pte & PTE_V)
+    {
+      // convert PTE to physical adress
+      uint64 child = PTE2PA(pte);
+      for (int k = 0; k <= level; k++) printf(" ..");
+      printf("%d: pte %p pa %p\n", i, pte, child);
+      pteprint((pagetable_t)child, level+1);
+    }
+  }
+}
+
+// print pagetable
+void
+vmprint(pagetable_t pagetable)
+{
+  printf("page table %p\n", pagetable);
+  pteprint(pagetable, 0);
+}
+// void
+// freewalk(pagetable_t pagetable)
+// {
+//   // there are 2^9 = 512 PTEs in a page table.
+//   for(int i = 0; i < 512; i++){
+//     pte_t pte = pagetable[i];
+//     if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0){
+//       // this PTE points to a lower-level page table.
+//       uint64 child = PTE2PA(pte);
+//       freewalk((pagetable_t)child);
+//       pagetable[i] = 0;
+//     } else if(pte & PTE_V){
+//       panic("freewalk: leaf");
+//     }
+//   }
+//   kfree((void*)pagetable);
+// }

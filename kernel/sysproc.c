@@ -75,6 +75,39 @@ int
 sys_pgaccess(void)
 {
   // lab pgtbl: your code here.
+  uint64 base;
+  argaddr(0, &base);
+  int len;
+  argint(1, &len);
+  uint64 maskAddr;
+  // now is in the kernel but maskAddr is in user mode
+  // store it by copyout
+  argaddr(2, &maskAddr);
+  int mask = 0;
+  if (len > 32)
+  {
+    printf("exceed maximium length\n");
+    return 0;
+  }
+
+  struct proc *p = myproc();
+  uint64 va = base;
+  for (int i = 0; i < len; i++, va += PGSIZE)
+  {
+    pte_t *pte = walk(p->pagetable, va, 0);
+    if(*pte & PTE_A)
+    {
+      mask |= 1 << i;
+      // claer the record of accessed before
+      *pte ^= PTE_A;
+    } else 
+    {
+      mask &= ~(1 << i);
+    }
+  }
+  printf("pgacess: %x \n", mask);
+  // get user mode's pagetable and store it in va from maskAddr
+  copyout(p->pagetable, maskAddr, (char *)&mask, sizeof(mask));
   return 0;
 }
 #endif

@@ -335,6 +335,8 @@ typedef uint64 *pagetable_t; // 512 PTEs
 #define PGSIZE 4096 // bytes per page
 #define PGSHIFT 12  // bits of offset within a page
 
+// the hexadecimal of 4096 is 0x1000, 4096 - 1 is 0xFFF, after ~ 
+// it clear the downside bits
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 #define PGROUNDDOWN(a) (((a)) & ~(PGSIZE-1))
 
@@ -343,10 +345,16 @@ typedef uint64 *pagetable_t; // 512 PTEs
 #define PTE_W (1L << 2)
 #define PTE_X (1L << 3)
 #define PTE_U (1L << 4) // user can access
+#define PTE_A (1L << 6) // pagetable been accessed
 
 // shift a physical address to the right place for a PTE.
+// it will ignore low 12 bits (offset bits) and reserve 10 bits for flags
 #define PA2PTE(pa) ((((uint64)pa) >> 12) << 10)
 
+// PTE contains 10bit Flags and 44 PPN
+// each physical address contain 44 bits of PPN and 12 bits offset
+// 2^12 = 4096, for pagetable it's 512 PTE the offset come from 9 bits
+// of original va, for final pa, the offset just the original offset
 #define PTE2PA(pte) (((pte) >> 10) << 12)
 
 #define PTE_FLAGS(pte) ((pte) & 0x3FF)
