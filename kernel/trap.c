@@ -47,6 +47,7 @@ usertrap(void)
 
   struct proc *p = myproc();
   
+  
   // save user program counter.
   p->trapframe->epc = r_sepc();
   
@@ -66,7 +67,24 @@ usertrap(void)
 
     syscall();
   } else if((which_dev = devintr()) != 0){
-    // ok
+    // interupt from device
+    if (which_dev == 2)
+    {
+      // each time interrupt add 1 to ticks
+      p->alarm.ticks++;
+      struct alarm alarm = p->alarm;
+      if (p->alarm.unfinish == 0 && alarm.intervel != 0 && alarm.ticks == alarm.intervel)
+      {
+        p->alarm.unfinish = 1;
+        // printf("\n pc: %p \n", p->trapframe->epc);
+        memmove(p->usertrap, p->trapframe, sizeof(*p->usertrap));
+        // start handle alarm
+        // printf("\n handler pc: %p \n", alarm.handler);
+        p->trapframe->epc = alarm.handler;
+        // after handle clear the ticks
+        p->alarm.ticks = 0;
+      }
+    }
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
@@ -77,6 +95,7 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
+  // if ticks > intervel call the handler
   if(which_dev == 2)
     yield();
 
@@ -90,6 +109,8 @@ void
 usertrapret(void)
 {
   struct proc *p = myproc();
+
+  
 
   // we're about to switch the destination of traps from
   // kerneltrap() to usertrap(), so turn off interrupts until

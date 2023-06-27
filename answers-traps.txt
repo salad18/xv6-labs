@@ -1,0 +1,20 @@
+a0~a8 contains the arguments of the function.
+
+g function is inline, f function call g at line 14
+14:	250d                	addw	a0,a0,3
+
+f is been omitted using the dirct number 12
+  printf("%d %d\n", f(8)+1, 13);
+  24:	4635                	li	a2,13
+  26:	45b1                	li	a1,12
+
+printf located at 630
+0000000000000630 <printf>
+
+38 in ra after jalr to printf
+
+output is He110 World
+57616 don't need to change, its still 0xe110, compiler will change it.
+i should change from 0x00646c72 to 0x726c6400(each word need 8 bits)
+
+it will get the value from a2, but we don't set it so it will be the last time value

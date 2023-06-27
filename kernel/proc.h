@@ -79,6 +79,16 @@ struct trapframe {
   /* 280 */ uint64 t6;
 };
 
+struct alarm
+{
+  int intervel;                // alarm interval
+  uint64 handler;              // the pointer to the handler function
+  int ticks;                   // ticks have passed since the last call
+  int unfinish;                // the handler is running
+  struct trapframe *trapframe; // data page for trampoline.S
+};
+
+
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Per-process state
@@ -104,4 +114,6 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  struct alarm alarm;          // Information of alarm
+  struct trapframe *usertrap;  // save and restore the rigisters when time alarm
 };

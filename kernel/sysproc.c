@@ -48,6 +48,18 @@ sys_sbrk(void)
   return addr;
 }
 
+void backtrace()
+{
+  printf("backtrace:\n");
+  uint64 fp = r_fp();
+  uint64 page = PGROUNDDOWN(fp) + PGSIZE;
+  for (; fp < page;)
+  {
+    printf("%p\n", *((uint64 *)(fp - 8)));
+    fp = *((uint64 *)(fp - 16));
+  }
+}
+
 uint64
 sys_sleep(void)
 {
@@ -66,6 +78,7 @@ sys_sleep(void)
     }
     sleep(&ticks, &tickslock);
   }
+  backtrace();
   release(&tickslock);
   return 0;
 }
@@ -90,4 +103,25 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+
+uint64
+sys_sigalarm(void)
+{
+  argint(0, &myproc()->alarm.intervel);
+  argaddr(1, &myproc()->alarm.handler);
+  return 0;
+}
+
+uint64
+sys_sigreturn(void)
+{
+  struct proc *p = myproc();
+  // finish handle
+  p->alarm.unfinish = 0;
+  // printf("\n sigreturn pc pc:%p\n", p->trapframe->epc);
+  memmove(p->trapframe, p->usertrap, sizeof(*p->trapframe));
+  // printf("\n restore pc pc:%p\n", p->usertrap->epc);
+  return p->trapframe->a0;
 }

@@ -114,6 +114,8 @@ allocproc(void)
   for(p = proc; p < &proc[NPROC]; p++) {
     acquire(&p->lock);
     if(p->state == UNUSED) {
+      p->alarm.ticks = 0;
+      p->alarm.intervel = 0;
       goto found;
     } else {
       release(&p->lock);
@@ -124,6 +126,13 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+
+  // Allocate a usertrape
+  if((p->usertrap = (struct trapframe *)kalloc()) == 0){
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -155,6 +164,8 @@ found:
 static void
 freeproc(struct proc *p)
 {
+  if(p->usertrap)
+    kfree((void*)p->usertrap);
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
